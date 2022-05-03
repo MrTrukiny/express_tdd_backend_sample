@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +16,12 @@
     "express": "^4.18.1"
   },
   "devDependencies": {
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-xo": "^0.40.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "jest": "^28.0.3",
+    "prettier": "^2.6.2",
     "supertest": "^6.2.3"
   }
 }
