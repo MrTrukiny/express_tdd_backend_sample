@@ -5,6 +5,9 @@ env:
 extends:
   - xo
   - plugin:prettier/recommended
+globals:
+  expect: writable
+  it: writable  
 parserOptions:
   ecmaVersion: latest
 plugins:
