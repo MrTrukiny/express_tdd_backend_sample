@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node index",
+    "start:dev": "nodemon index",
     "test": "jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -13,7 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.1"
+    "colors": "^1.4.0",
+    "express": "^4.18.1",
+    "mongoose": "^6.3.2"
   },
   "devDependencies": {
     "eslint": "^8.14.0",
@@ -21,6 +24,7 @@
     "eslint-config-xo": "^0.40.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^28.0.3",
+    "nodemon": "^2.0.16",
     "prettier": "^2.6.2",
     "supertest": "^6.2.3"
   }
