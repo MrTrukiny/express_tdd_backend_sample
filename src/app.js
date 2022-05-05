@@ -1,14 +1,17 @@
 const express = require('express');
 require('colors');
 
-// Config
-const connectToDb = require('./config/database');
+// Models
+const User = require('./models/User.model');
 
 const app = express();
-connectToDb();
+
+app.use(express.json());
 
 app.post('/api/v1.0/auth/local/signup', (req, res) => {
-  res.status(201).send({ message: 'Success' });
+  User.create(req.body).then(() => {
+    res.status(201).send({ message: 'Success' });
+  });
 });
 
 module.exports = app;
