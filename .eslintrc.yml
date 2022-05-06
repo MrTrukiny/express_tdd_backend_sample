@@ -6,6 +6,8 @@ extends:
   - xo
   - plugin:prettier/recommended
 globals:
+  afterAll: writable
+  beforeAll: writable
   beforeEach: writable
   describe: writable
   expect: writable

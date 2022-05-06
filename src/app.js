@@ -4,11 +4,7 @@ require('colors');
 // Models
 const User = require('./models/User.model');
 
-// Config
-const connectToDb = require('./config/database');
-
 const app = express();
-connectToDb();
 
 app.use(express.json());
 
