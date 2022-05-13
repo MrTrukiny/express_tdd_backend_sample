@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
+const config = require('../../config');
 
-// eslint-disable-next-line no-warning-comments
-// TODO: Change Mongo URI dynamically according to environment.
-// Right now is always set to local.
-const MONGO_URI = 'mongodb://localhost:27017/favs_app_test?replicaSet=rs';
+const { NODE_ENV } = config;
+const MONGO_URI = config[NODE_ENV].database.mongoUri;
 
 const connectToDb = async () => {
   try {
