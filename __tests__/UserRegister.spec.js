@@ -12,7 +12,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  return User.db.dropCollection('users').catch((error) => console.log(error));
+  return User.db.dropCollection('users').catch((error) => console.log(error.message));
 });
 
 afterAll(() => {
