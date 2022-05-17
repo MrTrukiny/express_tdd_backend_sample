@@ -1,3 +1,5 @@
+const { validationResult } = require('express-validator');
+
 const validateEmail = (req, res, next) => {
   const { body } = req;
   if (!body.email) {
@@ -21,4 +23,17 @@ const validatePassword = (req, res, next) => {
   next();
 };
 
-module.exports = { validateEmail, validatePassword };
+const validationResults = (req, res, next) => {
+  const errors = validationResult(req);
+  const validationErrors = {};
+  if (!errors.isEmpty()) {
+    errors.array().forEach((error) => {
+      validationErrors[error.param] = error.msg;
+    });
+    return res.status(400).send({ validationErrors });
+  }
+
+  next();
+};
+
+module.exports = { validateEmail, validatePassword, validationResults };

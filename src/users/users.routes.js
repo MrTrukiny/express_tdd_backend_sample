@@ -1,14 +1,18 @@
 const { Router } = require('express');
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 
 // Controllers
 const { postUser } = require('./controllers');
 
-/* // Middlewares
+// Models
+const User = require('../models/User.model');
+
+// Middlewares
 const {
-  validateEmail,
-  validatePassword,
-} = require('../shared/middlewares/userValidation.middlewares'); */
+  // validateEmail,
+  // validatePassword,
+  validationResults,
+} = require('../shared/middlewares/userValidation.middlewares');
 
 const { API_BASE_URL } = require('../shared/constants');
 
@@ -17,22 +21,21 @@ const router = Router();
 
 router.post(
   `${API_BASE_URL}/auth/local/signup`,
-  body('email').notEmpty().withMessage('Email cannot be empty'),
+  body('email')
+    .notEmpty()
+    .withMessage('Email cannot be empty')
+    .bail()
+    .isEmail()
+    .withMessage('Email is not valid')
+    .bail()
+    .custom(async (email) => {
+      const user = await User.findOne({ email });
+      if (user) {
+        throw new Error('Email in use');
+      }
+    }),
   body('password').notEmpty().withMessage('Password cannot be empty'),
-  (req, res, next) => {
-    // Finds the validation errors in this request
-    // and wraps them in an object with handy functions
-    const errors = validationResult(req);
-    const validationErrors = {};
-    if (!errors.isEmpty()) {
-      errors.array().forEach((error) => {
-        validationErrors[error.param] = error.msg;
-      });
-      return res.status(400).send({ validationErrors });
-    }
-
-    next();
-  },
+  validationResults,
   postUser,
 );
 
