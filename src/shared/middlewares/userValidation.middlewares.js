@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator');
+const userSchema = require('../../users/user.joi.schema');
 
 const validateEmail = (req, res, next) => {
   const { body } = req;
@@ -36,4 +37,16 @@ const validationResults = (req, res, next) => {
   next();
 };
 
-module.exports = { validateEmail, validatePassword, validationResults };
+const joiValidation = (req, res, next) => {
+  const { body } = req;
+  const { error } = userSchema.validate(body);
+  if (error) {
+    const validationErrors = {};
+    validationErrors[error.details[0].context.label] = error.details[0].message;
+    return res.status(400).send({ validationErrors });
+  }
+
+  next();
+};
+
+module.exports = { validateEmail, validatePassword, validationResults, joiValidation };
