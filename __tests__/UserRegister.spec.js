@@ -1,9 +1,12 @@
 require('dotenv').config();
 const request = require('supertest');
+const { interactsWithMail } = require('nodemailer-stub');
+
 const app = require('../src/app');
 const connectToDb = require('../src/config/database');
 const User = require('../src/models/User.model');
 const { API_BASE_URL } = require('../src/shared/constants');
+const emailService = require('../src/shared/services/email.service');
 
 let dbConnection;
 
@@ -90,19 +93,80 @@ describe('User Registration', () => {
     expect(Object.keys(body.validationErrors)).toEqual(['email', 'password']);
   });
 
-  it('Returns "Email cannot be empty" when email is empty', async () => {
-    const response = await postUser({
-      password: validUser.password,
-    });
-    const { body } = response;
-    expect(body.validationErrors.email).toBe('Email cannot be empty');
+  it.each`
+    field         | expectedMessage
+    ${'email'}    | ${'Email cannot be empty'}
+    ${'password'} | ${'Password cannot be empty'}
+  `(
+    'Returns $expectedMessage when $field is empty',
+    async ({ field, expectedMessage }) => {
+      const user = {
+        email: validUser.email,
+        password: validUser.password,
+      };
+      user[field] = null;
+      const response = await postUser(user);
+      const { body } = response;
+      expect(body.validationErrors[field]).toBe(expectedMessage);
+    },
+  );
+
+  it('Creates user in inactive mode', async () => {
+    await postUser();
+    const users = await User.find();
+    const savedUser = users[0];
+    expect(savedUser.isActive).toBe(false);
   });
 
-  it('Returns "Password cannot be empty" when password is empty', async () => {
-    const response = await postUser({
-      email: validUser.email,
-    });
-    const { body } = response;
-    expect(body.validationErrors.password).toBe('Password cannot be empty');
+  it('Creates user in inactive mode even when the request body contains "isActive" as true', async () => {
+    const newUser = { ...validUser, isActive: true };
+    await postUser(newUser);
+    const users = await User.find();
+    const savedUser = users[0];
+    expect(savedUser.isActive).toBe(false);
+  });
+
+  it('Creates an activationToken for user', async () => {
+    await postUser();
+    const users = await User.find();
+    const savedUser = users[0];
+    expect(savedUser.activationToken).toBeTruthy();
+  });
+
+  it('Sends an "Account activation email" with activationToken', async () => {
+    await postUser();
+    const lastMail = interactsWithMail.lastMail();
+    expect(lastMail.to[0]).toBe(validUser.email);
+    const users = await User.find();
+    const savedUser = users[0];
+    expect(lastMail.content).toContain(savedUser.activationToken);
+  });
+
+  it('Returns "502 Bad Gateway" when sending email fails', async () => {
+    const mockSendAccountActivationEmail = jest
+      .spyOn(emailService, 'sendAccountActivationEmail')
+      .mockRejectedValue({ message: 'Failed to deliver email' });
+    const response = await postUser();
+    mockSendAccountActivationEmail.mockRestore();
+    expect(response.status).toBe(502);
+  });
+
+  it('Returns "Email failure" message when sending email fails', async () => {
+    const mockSendAccountActivationEmail = jest
+      .spyOn(emailService, 'sendAccountActivationEmail')
+      .mockRejectedValue({ message: 'Failed to deliver email' });
+    const response = await postUser();
+    mockSendAccountActivationEmail.mockRestore();
+    expect(response.body.message).toBe('Email failure');
+  });
+
+  it('Does not save user to database if activation email fails', async () => {
+    const mockSendAccountActivationEmail = jest
+      .spyOn(emailService, 'sendAccountActivationEmail')
+      .mockRejectedValue({ message: 'Failed to deliver email' });
+    await postUser();
+    mockSendAccountActivationEmail.mockRestore();
+    const users = await User.find();
+    expect(users.length).toBe(0);
   });
 });

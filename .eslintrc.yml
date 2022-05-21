@@ -11,6 +11,7 @@ globals:
   beforeEach: writable
   describe: writable
   expect: writable
+  jest: writable
   it: writable  
 parserOptions:
   ecmaVersion: latest
