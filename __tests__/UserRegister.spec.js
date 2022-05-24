@@ -14,24 +14,24 @@ beforeAll(async () => {
   dbConnection = await connectToDb();
 });
 
-beforeEach(() => {
-  return User.db.dropCollection('users').catch((error) => console.log(error.message));
+beforeEach(async () => {
+  await User.deleteMany();
 });
 
 afterAll(() => {
   dbConnection.disconnect();
 });
 
+const validUser = {
+  email: 'user1@test.com',
+  password: 'T3st1234*',
+};
+
+const postUser = (user = validUser) => {
+  return request(app).post(`${API_BASE_URL}/auth/local/signup`).send(user);
+};
+
 describe('User Registration', () => {
-  const validUser = {
-    email: 'user1@test.com',
-    password: 'T3st1234*',
-  };
-
-  const postUser = (user = validUser) => {
-    return request(app).post(`${API_BASE_URL}/auth/local/signup`).send(user);
-  };
-
   it('Returns "201 OK" when signup request is valid', async () => {
     const response = await postUser();
     expect(response.status).toBe(201);
@@ -168,5 +168,22 @@ describe('User Registration', () => {
     mockSendAccountActivationEmail.mockRestore();
     const users = await User.find();
     expect(users.length).toBe(0);
+  });
+});
+
+describe('User Activation', () => {
+  const postActivateUser = (token) => {
+    return request(app).post(`${API_BASE_URL}/auth/local/activate/${token}`).send();
+  };
+
+  it('Activates the User account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.find();
+    const token = users[0].activationToken;
+
+    await postActivateUser(token);
+
+    users = await User.find();
+    expect(users[0].isActive).toBe(true);
   });
 });

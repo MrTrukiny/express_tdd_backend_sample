@@ -30,6 +30,7 @@
     "eslint-config-xo": "^0.40.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^28.0.3",
+    "jest-watch-typeahead": "^1.1.0",
     "nodemailer-stub": "^1.2.2",
     "nodemon": "^2.0.16",
     "prettier": "^2.6.2",
