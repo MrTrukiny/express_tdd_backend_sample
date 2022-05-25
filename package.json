@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node index",
-    "start:dev": "cross-env NODE_ENV=testing nodemon index",
+    "start:dev": "cross-env NODE_ENV=development nodemon index",
     "test": "cross-env NODE_ENV=testing jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -34,6 +34,7 @@
     "nodemailer-stub": "^1.2.2",
     "nodemon": "^2.0.16",
     "prettier": "^2.6.2",
+    "smtp-server": "^3.11.0",
     "supertest": "^6.2.3"
   }
 }

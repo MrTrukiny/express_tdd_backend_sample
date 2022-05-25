@@ -1,25 +1,54 @@
+/* eslint-disable capitalized-comments */
 require('dotenv').config();
 const request = require('supertest');
-const { interactsWithMail } = require('nodemailer-stub');
+// const { interactsWithMail } = require('nodemailer-stub');
+const { SMTPServer } = require('smtp-server');
 
 const app = require('../src/app');
 const connectToDb = require('../src/config/database');
 const User = require('../src/models/User.model');
 const { API_BASE_URL } = require('../src/shared/constants');
-const emailService = require('../src/shared/services/email.service');
+// const emailService = require('../src/shared/services/email.service');
 
+let lastMail;
+let emailServer;
+let simulateSmtpFailure = false;
 let dbConnection;
 
 beforeAll(async () => {
+  emailServer = new SMTPServer({
+    authOptional: true,
+    onData(stream, _session, callback) {
+      let mailBody;
+      stream.on('data', (data) => {
+        mailBody += data.toString();
+      });
+      stream.on('end', () => {
+        if (simulateSmtpFailure) {
+          const err = new Error('Invalid mailbox');
+          err.responseCode = 553;
+          return callback(err);
+        }
+
+        lastMail = mailBody;
+        callback();
+      });
+    },
+  });
+
+  await emailServer.listen(8587, 'localhost');
+
   dbConnection = await connectToDb();
 });
 
 beforeEach(async () => {
+  simulateSmtpFailure = false;
   await User.deleteMany();
 });
 
-afterAll(() => {
-  dbConnection.disconnect();
+afterAll(async () => {
+  await emailServer.close();
+  await dbConnection.disconnect();
 });
 
 const validUser = {
@@ -135,37 +164,40 @@ describe('User Registration', () => {
 
   it('Sends an "Account activation email" with activationToken', async () => {
     await postUser();
-    const lastMail = interactsWithMail.lastMail();
-    expect(lastMail.to[0]).toBe(validUser.email);
+    // const lastMail = interactsWithMail.lastMail();
+    expect(lastMail).toContain(validUser.email);
     const users = await User.find();
     const savedUser = users[0];
-    expect(lastMail.content).toContain(savedUser.activationToken);
+    expect(lastMail).toContain(savedUser.activationToken);
   });
 
   it('Returns "502 Bad Gateway" when sending email fails', async () => {
-    const mockSendAccountActivationEmail = jest
+    /* const mockSendAccountActivationEmail = jest
       .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+      .mockRejectedValue({ message: 'Failed to deliver email' }); */
+    simulateSmtpFailure = true;
     const response = await postUser();
-    mockSendAccountActivationEmail.mockRestore();
+    // mockSendAccountActivationEmail.mockRestore();
     expect(response.status).toBe(502);
   });
 
   it('Returns "Email failure" message when sending email fails', async () => {
-    const mockSendAccountActivationEmail = jest
+    /* const mockSendAccountActivationEmail = jest
       .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+      .mockRejectedValue({ message: 'Failed to deliver email' }); */
+    simulateSmtpFailure = true;
     const response = await postUser();
-    mockSendAccountActivationEmail.mockRestore();
+    // mockSendAccountActivationEmail.mockRestore();
     expect(response.body.message).toBe('Email failure');
   });
 
   it('Does not save user to database if activation email fails', async () => {
-    const mockSendAccountActivationEmail = jest
+    /* const mockSendAccountActivationEmail = jest
       .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+      .mockRejectedValue({ message: 'Failed to deliver email' }); */
+    simulateSmtpFailure = true;
     await postUser();
-    mockSendAccountActivationEmail.mockRestore();
+    // mockSendAccountActivationEmail.mockRestore();
     const users = await User.find();
     expect(users.length).toBe(0);
   });
@@ -185,5 +217,32 @@ describe('User Activation', () => {
 
     users = await User.find();
     expect(users[0].isActive).toBe(true);
+  });
+
+  it('Removes the token from user table after successful activation', async () => {
+    await postUser();
+    let users = await User.find();
+    const token = users[0].activationToken;
+
+    await postActivateUser(token);
+
+    users = await User.find();
+    expect(users[0].activationToken).toBeFalsy();
+  });
+
+  it('Does not activate the account when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    await postActivateUser(token);
+
+    const users = await User.find();
+    expect(users[0].isActive).toBe(false);
+  });
+
+  it('Returns bad request when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    const response = await postActivateUser(token);
+    expect(response.status).toBe(400);
   });
 });
