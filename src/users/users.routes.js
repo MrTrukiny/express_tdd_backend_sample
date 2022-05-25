@@ -1,4 +1,3 @@
-/* eslint-disable capitalized-comments */
 const { Router } = require('express');
 const { body } = require('express-validator');
 
@@ -10,9 +9,8 @@ const User = require('../models/User.model');
 
 // Middlewares
 const {
-  // joiValidation,
   validationResults,
-} = require('../shared/middlewares/userValidation.middlewares');
+} = require('../shared/middlewares/validationResults.middleware');
 
 const { API_BASE_URL } = require('../shared/constants');
 
@@ -21,7 +19,6 @@ const router = Router();
 
 router.post(
   `${API_BASE_URL}/auth/local/signup`,
-  // joiValidation,
   body('email')
     .notEmpty()
     .withMessage('Email cannot be empty')
