@@ -25,6 +25,8 @@ const userSchema = new Schema({
     unique: true,
   },
   password: { type: String, required: true, minlength: 6, select: false },
+  isActive: { type: Boolean, default: false },
+  activationToken: String,
 });
 
 module.exports = model('User', userSchema);

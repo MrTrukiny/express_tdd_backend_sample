@@ -3,7 +3,7 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 
 // Controllers
-const { postUser } = require('./controllers');
+const { postUser, postActivateUser } = require('./controllers');
 
 // Models
 const User = require('../models/User.model');
@@ -39,5 +39,7 @@ router.post(
   validationResults,
   postUser,
 );
+
+router.post(`${API_BASE_URL}/auth/local/activate/:token`, postActivateUser);
 
 module.exports = router;
