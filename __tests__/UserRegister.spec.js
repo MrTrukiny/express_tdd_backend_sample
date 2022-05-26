@@ -1,14 +1,11 @@
-/* eslint-disable capitalized-comments */
 require('dotenv').config();
 const request = require('supertest');
-// const { interactsWithMail } = require('nodemailer-stub');
 const { SMTPServer } = require('smtp-server');
 
 const app = require('../src/app');
 const connectToDb = require('../src/config/database');
 const User = require('../src/models/User.model');
-const { API_BASE_URL } = require('../src/shared/constants');
-// const emailService = require('../src/shared/services/email.service');
+const { API_BASE_URL } = require('../src/shared/utils/constants');
 
 let lastMail;
 let emailServer;
@@ -110,7 +107,7 @@ describe('User Registration', () => {
       password: validUser.password,
     });
     const { body } = response;
-    expect(body.validationErrors).not.toBeUndefined();
+    expect(body.error.validationErrors).not.toBeUndefined();
   });
 
   it('Returns errors for both when email and password are empty', async () => {
@@ -119,7 +116,7 @@ describe('User Registration', () => {
       password: null,
     });
     const { body } = response;
-    expect(Object.keys(body.validationErrors)).toEqual(['email', 'password']);
+    expect(Object.keys(body.error.validationErrors)).toEqual(['email', 'password']);
   });
 
   it.each`
@@ -136,7 +133,7 @@ describe('User Registration', () => {
       user[field] = null;
       const response = await postUser(user);
       const { body } = response;
-      expect(body.validationErrors[field]).toBe(expectedMessage);
+      expect(body.error.validationErrors[field]).toBe(expectedMessage);
     },
   );
 
@@ -172,32 +169,20 @@ describe('User Registration', () => {
   });
 
   it('Returns "502 Bad Gateway" when sending email fails', async () => {
-    /* const mockSendAccountActivationEmail = jest
-      .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' }); */
     simulateSmtpFailure = true;
     const response = await postUser();
-    // mockSendAccountActivationEmail.mockRestore();
     expect(response.status).toBe(502);
   });
 
   it('Returns "Email failure" message when sending email fails', async () => {
-    /* const mockSendAccountActivationEmail = jest
-      .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' }); */
     simulateSmtpFailure = true;
     const response = await postUser();
-    // mockSendAccountActivationEmail.mockRestore();
-    expect(response.body.message).toBe('Email failure');
+    expect(response.body.error).toBe('Email failure');
   });
 
   it('Does not save user to database if activation email fails', async () => {
-    /* const mockSendAccountActivationEmail = jest
-      .spyOn(emailService, 'sendAccountActivationEmail')
-      .mockRejectedValue({ message: 'Failed to deliver email' }); */
     simulateSmtpFailure = true;
     await postUser();
-    // mockSendAccountActivationEmail.mockRestore();
     const users = await User.find();
     expect(users.length).toBe(0);
   });
@@ -244,5 +229,6 @@ describe('User Activation', () => {
     const token = 'this-token-does-not-exist';
     const response = await postActivateUser(token);
     expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Invalid token, try again');
   });
 });
