@@ -12,7 +12,7 @@ const {
   validationResults,
 } = require('../shared/middlewares/validationResults.middleware');
 
-const { API_BASE_URL } = require('../shared/constants');
+const { API_BASE_URL } = require('../shared/utils/constants');
 
 // eslint-disable-next-line new-cap
 const router = Router();
