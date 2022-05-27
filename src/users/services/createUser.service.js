@@ -2,22 +2,29 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 
-const User = require('../../models/User.model');
+const UserModel = require('../../models/User.model');
 const emailService = require('../../shared/services/email.service');
 
 const createUser = async ({ ...userData }) => {
-  const hash = await hashPassword(userData.password);
+  const { email, password } = userData;
+  const hashedPassword = await hashPassword(password);
   const activationToken = generateToken(16);
-  const user = { ...userData, password: hash, isActive: false, activationToken };
 
-  const session = await mongoose.startSession();
-
-  await session.withTransaction(async () => {
-    await User.create([user], { session });
-    await emailService.sendAccountActivationEmail(userData.email, activationToken);
+  const user = new UserModel({
+    email,
+    password: hashedPassword,
+    isActive: false,
+    activationToken,
   });
 
+  const session = await mongoose.startSession();
+  await session.withTransaction(async () => {
+    await user.save({ session });
+    await emailService.sendAccountActivationEmail(email, activationToken);
+  });
   await session.endSession();
+
+  return user;
 };
 
 async function hashPassword(password) {

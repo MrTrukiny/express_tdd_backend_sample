@@ -3,8 +3,8 @@ const { createUser } = require('../services');
 
 const postUser = asyncHandler(async (req, res) => {
   const { body } = req;
-  await createUser({ ...body });
-  return res.status(201).send({ message: 'User created' });
+  const user = await createUser({ ...body });
+  return res.status(201).send({ data: { user }, message: 'User created', status: 'OK' });
 });
 
 module.exports = postUser;

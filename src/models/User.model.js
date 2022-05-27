@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const { Schema, model, Types } = mongoose;
 
 const userSchema = new Schema({
   email: {
@@ -27,6 +27,7 @@ const userSchema = new Schema({
   password: { type: String, required: true, minlength: 6, select: false },
   isActive: { type: Boolean, default: false },
   activationToken: String,
+  favorites: [{ type: Types.ObjectId, ref: 'Favorite', required: true }],
 });
 
 module.exports = model('User', userSchema);
