@@ -11,4 +11,10 @@ module.exports = {
       },
     },
   },
+  payments: {
+    mercadopago: {
+      publicKey: process.env.MERCADO_PAGO_PUBLIC_KEY,
+      accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
+    },
+  },
 };
