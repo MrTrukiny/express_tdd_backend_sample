@@ -6,5 +6,5 @@ const { PORT } = require('./config');
 connectToDb();
 
 app.listen(PORT, () => {
-  console.log(`Server is running on PORT: ${PORT}`.yellow.bold);
+  console.info(`Server is running on PORT: ${PORT}`.yellow.bold);
 });

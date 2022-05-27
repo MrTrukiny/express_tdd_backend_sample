@@ -6,13 +6,18 @@ extends:
   - xo
   - plugin:prettier/recommended
 globals:
+  $: writable
   afterAll: writable
+  alert: writable
   beforeAll: writable
   beforeEach: writable
   describe: writable
+  document: writable
   expect: writable
+  fetch: writable
   jest: writable
-  it: writable  
+  it: writable
+  parseInt: writable
 parserOptions:
   ecmaVersion: latest
 plugins:

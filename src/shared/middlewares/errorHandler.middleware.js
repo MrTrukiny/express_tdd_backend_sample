@@ -2,8 +2,6 @@ const { Result } = require('express-validator');
 const { APIError } = require('../errors/httpErrors');
 
 const errorHandlerMiddleware = (error, req, res, next) => {
-  console.log('Error from Middleware =>', error);
-
   const apiError = new APIError();
 
   if (res.headerSent) {
