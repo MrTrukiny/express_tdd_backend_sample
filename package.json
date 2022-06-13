@@ -7,7 +7,8 @@
     "start": "cross-env NODE_ENV=production node index",
     "start:dev": "cross-env NODE_ENV=development nodemon index",
     "start:dev:debug": "cross-env NODE_ENV=development nodemon --inspect index",
-    "test": "cross-env NODE_ENV=testing jest --watch",
+    "test": "cross-env NODE_ENV=testing jest --ci --forceExit",
+    "test:local": "cross-env NODE_ENV=testing jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -17,6 +18,7 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "colors": "^1.4.0",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.0.0",
     "express": "^4.18.1",
     "express-validator": "^6.14.0",
@@ -25,7 +27,6 @@
     "nodemailer": "^6.7.5"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-xo": "^0.40.0",
